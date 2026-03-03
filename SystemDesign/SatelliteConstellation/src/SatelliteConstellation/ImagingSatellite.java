@@ -1,3 +1,5 @@
+package SatelliteConstellation;
+
 public class ImagingSatellite extends Satellite {
     private double resolution;
     private int photosTaken;
@@ -19,13 +21,12 @@ public class ImagingSatellite extends Satellite {
 
     private void takePhoto() {
         if (energy.getBatteryLevel() >= takingPhotoConsumption) {
-            System.out.println(name + ": Съемка территории с разрешением " + resolution + "м/пиксель");
+            System.out.println(name + ": Съемка территории с разрешением " + resolution + " м/пиксель");
             photosTaken++;
+            System.out.println(name + ": Снимок #" + photosTaken + " сделан!");
             energy.consume(takingPhotoConsumption);
-
         } else System.out.println("🛑 " + name + ": Недостаточно заряда для выполнения съемки");
     }
-
 
     @Override
     public void performMission() {
@@ -37,10 +38,9 @@ public class ImagingSatellite extends Satellite {
 
     @Override
     public String toString() {
-        return "ImagingSatellite{resolution=" + resolution + ", photosTaken=" + photosTaken +
-                ", name='" + getName() + "', isActive=" + state.isActive() +
-                ", batteryLevel=" + energy.getBatteryLevel() + "}";
+        return "ImagingSatellite{photosTaken=" + photosTaken +
+                ", name='" + getName() + "'" +
+                ", state=" + state +
+                ", energy=EnergySystem{batteryLevel=" + energy.getBatteryLevel() + "}}";
     }
-
-
 }

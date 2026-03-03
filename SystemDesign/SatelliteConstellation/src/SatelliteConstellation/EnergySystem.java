@@ -1,3 +1,5 @@
+package SatelliteConstellation;
+
 public class EnergySystem {
 
     private double batteryLevel;
