@@ -3,9 +3,10 @@ public class ImagingSatellite extends Satellite {
     private int photosTaken;
     private double takingPhotoConsumption = 0.08;
 
-    public ImagingSatellite(String name, double batteryLevel, double resolution) {
-        super(name, batteryLevel);
+    public ImagingSatellite(String name, SatelliteState state, EnergySystem energy, double resolution) {
+        super(name, state, energy);
         this.resolution = resolution;
+        this.photosTaken = 0;
     }
 
     public double getResolution() {
@@ -17,10 +18,10 @@ public class ImagingSatellite extends Satellite {
     }
 
     private void takePhoto() {
-        photosTaken++;
-        if (batteryLevel >= takingPhotoConsumption) {
+        if (energy.getBatteryLevel() >= takingPhotoConsumption) {
             System.out.println(name + ": Съемка территории с разрешением " + resolution + "м/пиксель");
-            consumeBattery(takingPhotoConsumption);
+            photosTaken++;
+            energy.consume(takingPhotoConsumption);
 
         } else System.out.println("🛑 " + name + ": Недостаточно заряда для выполнения съемки");
     }
@@ -28,17 +29,19 @@ public class ImagingSatellite extends Satellite {
 
     @Override
     public void performMission() {
-        if (isActive) takePhoto();
+        if (state.isActive()) takePhoto();
         else {
             System.out.println("🛑 " + name + ": Выключен");
         }
+
+        state.updateState(energy.getBatteryLevel());
     }
 
     @Override
     public String toString() {
         return "ImagingSatellite{resolution=" + resolution + ", photosTaken=" + photosTaken +
-                ", name='" + getName() + "', isActive=" + isActive() +
-                ", batteryLevel=" + getBatteryLevel() + "}";
+                ", name='" + getName() + "', isActive=" + state.isActive() +
+                ", batteryLevel=" + energy.getBatteryLevel() + "}";
     }
 
 
