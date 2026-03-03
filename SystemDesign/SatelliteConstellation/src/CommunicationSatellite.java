@@ -2,8 +2,8 @@ public class CommunicationSatellite extends Satellite {
     private double bandwidth;
     private double sendingDataConsumption = 0.05;
 
-    public CommunicationSatellite(String name, SatelliteState state, EnergySystem energy, double bandwidth) {
-        super(name, state, energy);
+    public CommunicationSatellite(String name, double batteryLevel, double bandwidth) {
+        super(name, batteryLevel);
         this.bandwidth = bandwidth;
     }
 
@@ -25,7 +25,6 @@ public class CommunicationSatellite extends Satellite {
     public void performMission() {
         if (state.isActive()) sendData(1000);
         else System.out.println(name + ": Выключен");
-        state.updateState(energy.getBatteryLevel());
     }
 
     @Override

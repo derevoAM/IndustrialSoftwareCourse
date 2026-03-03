@@ -3,8 +3,8 @@ public class ImagingSatellite extends Satellite {
     private int photosTaken;
     private double takingPhotoConsumption = 0.08;
 
-    public ImagingSatellite(String name, SatelliteState state, EnergySystem energy, double resolution) {
-        super(name, state, energy);
+    public ImagingSatellite(String name, double batteryLevel, double resolution) {
+        super(name, batteryLevel);
         this.resolution = resolution;
         this.photosTaken = 0;
     }
@@ -33,8 +33,6 @@ public class ImagingSatellite extends Satellite {
         else {
             System.out.println("🛑 " + name + ": Выключен");
         }
-
-        state.updateState(energy.getBatteryLevel());
     }
 
     @Override

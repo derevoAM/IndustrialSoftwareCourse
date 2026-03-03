@@ -11,27 +11,22 @@ public class SatelliteState {
     }
 
 
-    public boolean activate(double batteryLevel) {
-        isActive = batteryLevel >= 0.2;
-        if (isActive) System.out.println("Активация успешна");
-        else System.out.println("Ошибка активации (заряд: " + batteryLevel + ")");
-        return isActive;
+    public boolean activate(boolean hasSufficientPower) {
+        if (hasSufficientPower && !isActive) {
+            isActive = true;
+            return true;
+        }
+        return false;
     }
 
 
-    public void deactivate() {
+    public boolean deactivate() {
         if (isActive) {
             isActive = false;
-            System.out.println("Деактивирован");
+            return true;
         }
+        return false;
     }
 
-    public void updateState(double batteryLevel)
-    {
-        if(batteryLevel <= 0.2 && isActive){
-            System.out.println("Низкий заряд. Деактивация");
-            deactivate();
-        }
-    }
 
 }
