@@ -1,5 +1,10 @@
 package SatelliteConstellation;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public abstract class Satellite {
 
     protected String name;
@@ -13,13 +18,6 @@ public abstract class Satellite {
         System.out.println("Создан спутник: " + name + " (" + batteryLevel + ")");
     }
 
-    public SatelliteState getState() {
-        return state;
-    }
-
-    public EnergySystem getEnergy() {
-        return energy;
-    }
 
     public boolean activate() {
         if (state.activate(energy.hasSufficientPower())) {
@@ -34,10 +32,6 @@ public abstract class Satellite {
         if (state.deactivate()) {
             System.out.println(name + ": Деактивирован");
         } else System.out.println(name + ": Ошибка деактивации - уже деактивирован");
-    }
-
-    public String getName() {
-        return name;
     }
 
     protected abstract void performMission();

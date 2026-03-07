@@ -1,8 +1,13 @@
 package SatelliteConstellation;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 import java.util.ArrayList;
 
+@Setter
+@Getter
 public class SatelliteConstellation {
     private String constellationName;
     private List<Satellite> satellites;
@@ -29,17 +34,10 @@ public class SatelliteConstellation {
         }
     }
 
-    public String getConstellationName(){
-        return constellationName;
-    }
-
-    public List<Satellite> getSatellites(){
-        return satellites;
-    }
 
     @Override
     public String toString() {
-        return "SatelliteConstellation{constellationName='" + constellationName + "', satellites=" + satellites + "}";
+        return "main.java.SatelliteConstellation{constellationName='" + constellationName + "', satellites=" + satellites + "}";
     }
 
 }

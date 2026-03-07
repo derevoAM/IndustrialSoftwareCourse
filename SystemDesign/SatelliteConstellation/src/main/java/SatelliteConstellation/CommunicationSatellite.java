@@ -1,5 +1,10 @@
 package SatelliteConstellation;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class CommunicationSatellite extends Satellite {
     private double bandwidth;
     private double sendingDataConsumption = 0.05;
@@ -7,10 +12,6 @@ public class CommunicationSatellite extends Satellite {
     public CommunicationSatellite(String name, double batteryLevel, double bandwidth) {
         super(name, batteryLevel);
         this.bandwidth = bandwidth;
-    }
-
-    public double getBandwidth() {
-        return bandwidth;
     }
 
     private void sendData(double data) {

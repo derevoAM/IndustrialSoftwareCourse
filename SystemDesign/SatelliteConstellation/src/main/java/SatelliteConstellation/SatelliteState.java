@@ -1,5 +1,12 @@
 package SatelliteConstellation;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
 public class SatelliteState {
     private boolean isActive;
     private String statusMessage;
@@ -7,10 +14,6 @@ public class SatelliteState {
     public SatelliteState() {
         this.isActive = false;
         this.statusMessage = "Не активирован";
-    }
-
-    public boolean isActive() {
-        return isActive;
     }
 
     public boolean activate(boolean hasSufficientPower) {
@@ -31,8 +34,5 @@ public class SatelliteState {
         return false;
     }
 
-    @Override
-    public String toString() {
-        return "SatelliteState{isActive=" + isActive + ", statusMessage='" + statusMessage + "'}";
-    }
+
 }

@@ -1,5 +1,10 @@
 package SatelliteConstellation;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter @Setter @ToString
 public class EnergySystem {
 
     private double batteryLevel;
@@ -9,13 +14,6 @@ public class EnergySystem {
 
     public EnergySystem(double batteryLevel){
         this.batteryLevel = Math.max(MIN_BATTERY, Math.min(batteryLevel, MAX_BATTERY));
-    }
-
-    public double getBatteryLevel() {
-        return batteryLevel;
-    }
-    public void setBatteryLevel(double batteryLevel) {
-        this.batteryLevel = batteryLevel;
     }
 
     public boolean consume(double consumption) {

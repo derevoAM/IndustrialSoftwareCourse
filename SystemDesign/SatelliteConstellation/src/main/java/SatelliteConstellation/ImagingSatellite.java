@@ -1,5 +1,10 @@
 package SatelliteConstellation;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class ImagingSatellite extends Satellite {
     private double resolution;
     private int photosTaken;
@@ -11,13 +16,6 @@ public class ImagingSatellite extends Satellite {
         this.photosTaken = 0;
     }
 
-    public double getResolution() {
-        return resolution;
-    }
-
-    public int getPhotosTaken() {
-        return photosTaken;
-    }
 
     private void takePhoto() {
         if (energy.getBatteryLevel() >= takingPhotoConsumption) {
