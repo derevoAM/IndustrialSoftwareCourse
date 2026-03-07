@@ -16,6 +16,9 @@ class ConstellationRepositoryIntegrationTest {
     @Autowired
     private ConstellationRepository constellationRepository;
 
+    SatelliteFactory imagingFactory = new ImagingSatelliteFactory();
+    SatelliteFactory communicationFactory = new CommunicationSatelliteFactory();
+
     @BeforeEach
     void cleanUp() {
         constellationRepository.delete(CONSTELLATION_NAME);
@@ -37,7 +40,7 @@ class ConstellationRepositoryIntegrationTest {
         SatelliteConstellation constellation = new SatelliteConstellation(CONSTELLATION_NAME);
         constellationRepository.create(CONSTELLATION_NAME, constellation);
 
-        constellation.addSatellite(new ImagingSatellite("ДЗЗ-Тест", 0.9, 2.5));
+        constellation.addSatellite(imagingFactory.createSatelliteWithParameter("ДЗЗ-Тест", 0.9, 2.5));
 
         assertEquals(1, constellationRepository.get(CONSTELLATION_NAME).getSatellites().size());
     }
@@ -46,7 +49,7 @@ class ConstellationRepositoryIntegrationTest {
     @DisplayName("Активация спутника меняет его статус на активен")
     void givenSatellite_whenActivating_thenIsActiveTrue() {
         SatelliteConstellation constellation = new SatelliteConstellation(CONSTELLATION_NAME);
-        ImagingSatellite satellite = new ImagingSatellite("ДЗЗ-Тест", 0.9, 2.5);
+        Satellite satellite = imagingFactory.createSatelliteWithParameter("ДЗЗ-Тест", 0.9, 2.5);
         constellation.addSatellite(satellite);
         constellationRepository.create(CONSTELLATION_NAME, constellation);
 
@@ -60,7 +63,7 @@ class ConstellationRepositoryIntegrationTest {
     @DisplayName("Выполнение миссии ImagingSatellite увеличивает счётчик снимков")
     void givenActivatedImagingSatellite_whenExecutingMission_thenPhotosTakenIncreases() {
         SatelliteConstellation constellation = new SatelliteConstellation(CONSTELLATION_NAME);
-        ImagingSatellite satellite = new ImagingSatellite("ДЗЗ-Тест", 0.9, 2.5);
+        ImagingSatellite satellite = (ImagingSatellite) imagingFactory.createSatelliteWithParameter("ДЗЗ-Тест", 0.9, 2.5);
         constellation.addSatellite(satellite);
         constellationRepository.create(CONSTELLATION_NAME, constellation);
         satellite.activate();
@@ -74,7 +77,7 @@ class ConstellationRepositoryIntegrationTest {
     @DisplayName("Выполнение миссии CommunicationSatellite уменьшает уровень батареи")
     void givenActivatedCommunicationSatellite_whenExecutingMission_thenBatteryDecreases() {
         SatelliteConstellation constellation = new SatelliteConstellation(CONSTELLATION_NAME);
-        CommunicationSatellite satellite = new CommunicationSatellite("Связь-Тест", 0.85, 500.0);
+        CommunicationSatellite satellite = (CommunicationSatellite) communicationFactory.createSatelliteWithParameter("Связь-Тест", 0.85, 500.0);
         constellation.addSatellite(satellite);
         constellationRepository.create(CONSTELLATION_NAME, constellation);
         satellite.activate();
@@ -92,8 +95,8 @@ class ConstellationRepositoryIntegrationTest {
         constellationRepository.create(CONSTELLATION_NAME, constellation);
         assertNotNull(constellationRepository.get(CONSTELLATION_NAME));
 
-        ImagingSatellite imagingSatellite = new ImagingSatellite("ДЗЗ-Тест", 0.9, 2.5);
-        CommunicationSatellite commSatellite = new CommunicationSatellite("Связь-Тест", 0.85, 500.0);
+        ImagingSatellite imagingSatellite = (ImagingSatellite) imagingFactory.createSatelliteWithParameter("ДЗЗ-Тест", 0.9, 2.5);
+        CommunicationSatellite commSatellite = (CommunicationSatellite) communicationFactory.createSatelliteWithParameter("Связь-Тест", 0.85, 500.0);
         constellation.addSatellite(imagingSatellite);
         constellation.addSatellite(commSatellite);
         assertEquals(2, constellationRepository.get(CONSTELLATION_NAME).getSatellites().size());

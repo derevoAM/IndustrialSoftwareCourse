@@ -14,7 +14,7 @@ public abstract class Satellite {
     public Satellite(String name, double batteryLevel) {
         this.name = name;
         this.state = new SatelliteState();
-        this.energy = new EnergySystem(batteryLevel);
+        this.energy = EnergySystem.builder().batteryLevel(batteryLevel).build();
         System.out.println("Создан спутник: " + name + " (" + batteryLevel + ")");
     }
 
