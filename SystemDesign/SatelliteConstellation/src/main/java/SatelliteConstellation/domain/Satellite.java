@@ -1,4 +1,4 @@
-package SatelliteConstellation;
+package SatelliteConstellation.domain;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +18,6 @@ public abstract class Satellite {
         System.out.println("Создан спутник: " + name + " (" + batteryLevel + ")");
     }
 
-
     public boolean activate() {
         if (state.activate(energy.hasSufficientPower())) {
             System.out.println("✅ " + name + ": Активация успешна");
@@ -36,12 +35,9 @@ public abstract class Satellite {
 
     protected abstract void performMission();
 
-    public void updateState()
-    {
-        if(!energy.hasSufficientPower())
-        {
+    public void updateState() {
+        if (!energy.hasSufficientPower()) {
             deactivate();
         }
     }
-
 }

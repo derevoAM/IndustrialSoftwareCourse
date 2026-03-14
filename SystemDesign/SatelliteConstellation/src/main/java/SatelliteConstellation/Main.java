@@ -1,5 +1,11 @@
 package SatelliteConstellation;
 
+import SatelliteConstellation.domain.Satellite;
+import SatelliteConstellation.param.CommunicationSatelliteParam;
+import SatelliteConstellation.param.ImagingSatelliteParam;
+import SatelliteConstellation.repository.ConstellationRepository;
+import SatelliteConstellation.service.SatelliteService;
+import SatelliteConstellation.service.SpaceOperationCenterService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -16,12 +22,14 @@ public class Main {
         System.out.println("СОЗДАНИЕ СПЕЦИАЛИЗИРОВАННЫХ СПУТНИКОВ:");
         System.out.println("---------------------------------------------");
 
-        CommunicationSatellite comSat1 = new CommunicationSatellite("Связь-1", 0.85, 500.0);
-        CommunicationSatellite comSat2 = new CommunicationSatellite("Связь-2", 0.75, 1000.0);
+        SatelliteService satelliteService = context.getBean(SatelliteService.class);
 
-        ImagingSatellite imagingSat1 = new ImagingSatellite("ДЗЗ-1", 0.92, 2.5);
-        ImagingSatellite imagingSat2 = new ImagingSatellite("ДЗЗ-2", 0.22, 1.0);
-        ImagingSatellite imagingSat3 = new ImagingSatellite("ДЗЗ-3", 0.15, 0.5);
+        Satellite comSat1 = satelliteService.createSatellite(new CommunicationSatelliteParam("Связь-1", 0.85, 500.0));
+        Satellite comSat2 = satelliteService.createSatellite(new CommunicationSatelliteParam("Связь-2", 0.75, 1000.0));
+
+        Satellite imagingSat1 = satelliteService.createSatellite(new ImagingSatelliteParam("ДЗЗ-1", 0.92, 2.5));
+        Satellite imagingSat2 = satelliteService.createSatellite(new ImagingSatelliteParam("ДЗЗ-2", 0.22, 1.0));
+        Satellite imagingSat3 = satelliteService.createSatellite(new ImagingSatelliteParam("ДЗЗ-3", 0.15, 0.5));
 
         System.out.println("---------------------------------------------");
 

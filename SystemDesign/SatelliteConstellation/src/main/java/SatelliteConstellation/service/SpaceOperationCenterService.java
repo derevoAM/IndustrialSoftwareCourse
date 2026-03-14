@@ -1,5 +1,8 @@
-package SatelliteConstellation;
+package SatelliteConstellation.service;
 
+import SatelliteConstellation.domain.Satellite;
+import SatelliteConstellation.domain.SatelliteConstellation;
+import SatelliteConstellation.repository.ConstellationRepository;
 import org.springframework.stereotype.Service;
 
 @Service

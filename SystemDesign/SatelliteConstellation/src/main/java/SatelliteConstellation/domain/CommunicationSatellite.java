@@ -1,4 +1,4 @@
-package SatelliteConstellation;
+package SatelliteConstellation.domain;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,5 +1,7 @@
 package SatelliteConstellation;
 
+import SatelliteConstellation.domain.SatelliteConstellation;
+import SatelliteConstellation.repository.ConstellationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
