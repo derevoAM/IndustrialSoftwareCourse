@@ -1,60 +1,35 @@
 package SatelliteConstellation.service;
 
+import SatelliteConstellation.aspect.Timed;
 import SatelliteConstellation.domain.Satellite;
-import SatelliteConstellation.domain.SatelliteConstellation;
-import SatelliteConstellation.repository.ConstellationRepository;
+import SatelliteConstellation.service.request.AddSatelliteRequest;
+import SatelliteConstellation.service.request.MissionRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class SpaceOperationCenterService {
 
-    private ConstellationRepository constellationRepository;
+    private final ConstellationService constellationService;
+    private final SatelliteService satelliteService;
 
-    public SpaceOperationCenterService(ConstellationRepository constellationRepository) {
-        this.constellationRepository = constellationRepository;
+    @Timed("addSatellite")
+    public void addSatellite(AddSatelliteRequest satelliteRequest) {
+        if (!constellationService.isConstellationInRepository(satelliteRequest.getConstellationName()))
+            constellationService.createAndSaveConstellation(satelliteRequest.getConstellationName());
+
+        Satellite satellite = satelliteService.createSatellite(satelliteRequest.getSatelliteParam());
+        satellite.activate();
+        constellationService.addSatelliteToConstellation(satelliteRequest.getConstellationName(), satellite);
     }
 
-    public void createAndSaveConstellation(String name) {
-        if (constellationRepository.get(name) == null) {
-            SatelliteConstellation constellation = new SatelliteConstellation(name);
-            constellationRepository.create(name, constellation);
-            System.out.println("Сохранена группировка: " + name);
-        } else System.out.println("Группировка с именем " + name + " уже существует");
+    @Timed("executeMission")
+    public void executeMission(MissionRequest missionRequest) {
+        if (constellationService.isConstellationInRepository(missionRequest.getConstellationName()))
+            constellationService.executeConstellationMission(missionRequest.getConstellationName());
+        else throw new RuntimeException("Группировки с таким названием не существует");
     }
 
-    public void addSatelliteToConstellation(String constellationName, Satellite satellite) {
-        if (constellationRepository.get(constellationName) != null && satellite != null) {
-            constellationRepository.get(constellationName).addSatellite(satellite);
-            System.out.println("Добавлен спутник " + satellite.getName() + " в группировку " + constellationName);
-        } else System.out.println("Ошибка добавления спутника в группировку " + constellationName);
-    }
 
-    public void activateAllSatellites(String constellationName) {
-        SatelliteConstellation constellation = constellationRepository.get(constellationName);
-        if (constellation != null) {
-            System.out.println("\n=== АКТИВАЦИЯ СПУТНИКОВ В ГРУППИРОВКЕ: " + constellationName + " ===");
-            for (Satellite satellite : constellation.getSatellites()) {
-                satellite.activate();
-            }
-        }
-    }
-
-    public void executeConstellationMission(String constellationName) {
-        SatelliteConstellation constellation = constellationRepository.get(constellationName);
-        if (constellation != null) {
-            System.out.println("\n=== ВЫПОЛНЕНИЕ МИССИЙ ДЛЯ ГРУППИРОВКИ: " + constellationName + " ===");
-            constellation.executeAllMissions();
-        }
-    }
-
-    public void showConstellationStatus(String constellationName) {
-        SatelliteConstellation constellation = constellationRepository.get(constellationName);
-        if (constellation != null) {
-            System.out.println("\n=== СТАТУС ГРУППИРОВКИ: " + constellationName + " ===");
-            System.out.println("Количество спутников: " + constellation.getSatellites().size());
-            for (Satellite satellite : constellation.getSatellites()) {
-                System.out.println(satellite.getState().toString());
-            }
-        }
-    }
 }
