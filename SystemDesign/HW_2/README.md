@@ -1,131 +1,180 @@
 # TigerBank — Модуль учёта финансов
 
-Консольное приложение на Java 17 для учёта доходов и расходов банка ТигрБанк.
-
----
-
 ## Предметная область
 
-Приложение позволяет вести учёт банковских счетов, категорий операций и финансовых транзакций.
-
-- **BankAccount** — банковский счёт с именем и балансом.
-- **Category** — категория операции (например, «Зарплата», «Продукты») с типом INCOME/EXPENSE.
-- **Operation** — финансовая транзакция: привязана к счёту и категории, имеет сумму и дату.
+Модуль личного учёта финансов для банковского приложения ТигрБанк. Программа моделирует три сущности: банковский счёт (`BankAccount`) с именем и балансом, категорию операции (`Category`) с типом INCOME или EXPENSE, и финансовую операцию (`Operation`), привязанную к счёту и категории. Баланс счёта пересчитывается автоматически при каждом изменении операций. Поддерживается аналитика по периодам, экспорт и импорт данных в трёх форматах.
 
 ---
 
 ## Реализованный функционал
 
-| Функция | Описание |
-|---|---|
-| Аналитика | Разница доходов и расходов за период |
-| Аналитика | Группировка операций по категориям за период |
-| Экспорт JSON | Экспорт всех данных в JSON-файл (Jackson) |
-| Импорт JSON | Загрузка данных из JSON-файла |
-| Экспорт CSV | Экспорт в CSV с секциями (#ACCOUNTS, #CATEGORIES, #OPERATIONS) |
-| Импорт CSV | Загрузка данных из CSV-файла |
-| Экспорт YAML | Экспорт в YAML-файл (Jackson + SnakeYAML) |
-| Импорт YAML | Загрузка данных из YAML-файла |
-| Замер времени | Декоратор `TimingOperationService` выводит время каждого вызова |
-| DI-контейнер | Ручная сборка всех зависимостей через `AppContext` |
+| Функция | Класс | Метод |
+|---|---|---|
+| Создать счёт | `BankAccountServiceImpl` | `create(id, name)`, `create(id, name, balance)` |
+| Переименовать счёт | `BankAccountServiceImpl` | `updateName(id, newName)` |
+| Удалить счёт | `BankAccountServiceImpl` | `delete(id)` |
+| Создать категорию | `CategoryServiceImpl` | `create(id, type, name)` |
+| Переименовать категорию | `CategoryServiceImpl` | `updateName(id, newName)` |
+| Удалить категорию | `CategoryServiceImpl` | `delete(id)` |
+| Создать операцию | `OperationServiceImpl` | `create(...)` — два варианта: с описанием и без |
+| Изменить сумму операции | `OperationServiceImpl` | `updateAmount(id, newAmount)` |
+| Изменить дату операции | `OperationServiceImpl` | `updateDate(id, newDate)` |
+| Изменить описание операции | `OperationServiceImpl` | `updateDescription(id, newDescription)` |
+| Удалить операцию | `OperationServiceImpl` | `delete(id)` |
+| Автопересчёт баланса | `OperationServiceImpl` | `recalculateBalance(accountId)` — вызывается после каждого create/update/delete |
+| Разница доходов и расходов за период | `AnalyticalServiceImpl` | `calculateDifference(accountId, from, to)` |
+| Группировка по категориям за период | `AnalyticalServiceImpl` | `groupByCategory(accountId, from, to)` |
+| Экспорт в JSON | `JsonExporter` | `export(data, filePath)` |
+| Импорт из JSON | `JsonImporter` | `importData(filePath)` |
+| Экспорт в CSV | `CsvExporter` | `export(data, filePath)` |
+| Импорт из CSV | `CsvImporter` | `importData(filePath)` |
+| Экспорт в YAML | `YamlExporter` | `export(data, filePath)` |
+| Импорт из YAML | `YamlImporter` | `importData(filePath)` |
+| Замер времени | `TimingAspect` | перехватывает методы с аннотацией `@Timed` |
 
 ---
 
-## Применение принципов SOLID
+## SOLID
 
-### S — Single Responsibility (Принцип единственной ответственности)
+### S — Single Responsibility
 
-Каждый класс отвечает только за одну вещь:
+Каждый класс имеет одну причину для изменения:
 
-- `BankAccountServiceImpl` — бизнес-логика счетов, не занимается хранением данных.
-- `InMemoryBankAccountRepository` — только хранение в памяти, не содержит бизнес-логики.
-- `CsvExporter` — только экспорт в CSV-формат; парсинг — в `CsvImporter`.
-- `AnalyticsServiceImpl` — только аналитика; CRUD — в отдельных сервисах.
+- `BankAccountServiceImpl` — только бизнес-логика счетов: создание, переименование, удаление, поиск. Не занимается хранением, аналитикой или экспортом.
+- `CategoryServiceImpl` — только бизнес-логика категорий. Не знает про операции или счета.
+- `OperationServiceImpl` — бизнес-логика операций и пересчёт баланса. Пересчёт баланса живёт здесь, а не в `BankAccountServiceImpl`, потому что именно операции являются источником изменения баланса.
+- `AnalyticalServiceImpl` — только аналитика. Не знает про репозитории, работает исключительно через `OperationService` и `CategoryService`. Если изменится хранилище — этот класс не трогаем.
+- `InMemoryBankAccountRepository`, `InMemoryCategoryRepository`, `InMemoryOperationRepository` — только хранение данных в памяти. Не содержат никакой бизнес-логики.
+- `JsonExporter`, `CsvExporter`, `YamlExporter` — каждый отвечает только за запись в своём формате.
+- `JsonImporter`, `CsvImporter`, `YamlImporter` — каждый отвечает только за чтение своего формата. Экспорт и импорт намеренно разделены на разные классы.
+- `TimingAspect` — только замер времени. Логика замера полностью вынесена из сервисов через AOP. Если нужно изменить формат вывода — меняем только `TimingAspect`, бизнес-логика не затронута.
 
-**Без SRP:** если бы `BankAccountService` сам писал в файл и считал аналитику, то при смене формата хранения или алгоритма подсчёта пришлось бы трогать один и тот же класс по несвязанным причинам.
+### O — Open/Closed
 
----
+Система открыта для расширения и закрыта для изменения:
 
-### O — Open/Closed (Открыт для расширения, закрыт для изменения)
-
-Интерфейсы `DataExporter` и `DataImporter` позволяют добавлять новые форматы (например, XML) без изменения существующего кода:
+- Интерфейсы `DataExporter` и `DataImporter` позволяют добавлять новые форматы без изменения существующего кода. YAML-поддержка была добавлена созданием двух новых классов — `YamlExporter` и `YamlImporter` — без изменения ни одной строки в `JsonExporter`, `CsvExporter` или `Main`.
+- Интерфейсы `BankAccountRepository`, `CategoryRepository`, `OperationRepository` позволяют менять реализацию хранилища (например, перейти на PostgreSQL) без изменения сервисов.
+- `AnalyticalServiceImpl` можно заменить другой реализацией `AnalyticalService` (например, с кэшированием) без изменения `Main` или других сервисов.
 
 ```java
-// Новый формат — просто новый класс:
+// Добавить XML — только новый класс, ничего существующего не меняем:
 public class XmlExporter implements DataExporter {
-    @Override
-    public void export(ExportData data, String filePath) throws IOException { ... }
+    public void export(ExportData data, String filePath) { ... }
 }
 ```
 
-`Main.java` и `DataManagementService` не меняются — они работают с интерфейсом.
+### L — Liskov Substitution
 
-Декоратор `TimingOperationService` добавляет замер времени **не изменяя** `OperationServiceImpl`.
+Любую реализацию интерфейса можно подставить вместо другой без нарушения поведения системы:
 
----
+- `InMemoryBankAccountRepository` полностью заменяет `BankAccountRepository` — `BankAccountServiceImpl` не знает и не должен знать, какая реализация подставлена.
+- Аналогично для `InMemoryCategoryRepository` → `CategoryRepository` и `InMemoryOperationRepository` → `OperationRepository`.
+- В тестах это проверяется напрямую: сервисы создаются с `new InMemoryBankAccountRepository()` без Spring — поведение идентично поведению в продакшн-контексте.
+- `JsonExporter`, `CsvExporter`, `YamlExporter` — все три реализуют `DataExporter` и взаимозаменяемы. `Main` работает с любым из них через один и тот же вызов `exporter.export(data, path)`.
 
-### L — Liskov Substitution (Принцип подстановки Лисков)
+### I — Interface Segregation
 
-Любую реализацию можно заменить другой без нарушения поведения:
+Интерфейсы узкие и сфокусированные — клиент получает только то, что ему нужно:
 
-- `TimingOperationService` полностью заменяет `OperationServiceImpl` — `Main.java` работает одинаково с обоими.
-- `InMemoryBankAccountRepository` можно заменить на `PostgresBankAccountRepository` — сервисы этого не заметят.
+- `DataExporter` и `DataImporter` — два отдельных интерфейса. `JsonExporter` реализует только `DataExporter` и ничего не знает про импорт. Если нужен только экспорт — не нужно реализовывать импорт.
+- `BankAccountService`, `CategoryService`, `OperationService`, `AnalyticalService` — четыре отдельных интерфейса. `AnalyticalServiceImpl` зависит только от `OperationService` и `CategoryService` — не от полного `BankAccountService`.
+- `BankAccountRepository`, `CategoryRepository`, `OperationRepository` — у каждого свой набор методов, соответствующий именно этой сущности. `OperationRepository` имеет `findByBankAccountId` и `findByDateBetween`, которых нет в других репозиториях.
 
-```java
-// В AppContext достаточно поменять одну строку:
-BankAccountRepository repo = new PostgresBankAccountRepository(dataSource);
-// Весь остальной код остаётся без изменений
-```
-
----
-
-### I — Interface Segregation (Принцип разделения интерфейсов)
-
-Интерфейсы разделены по смыслу:
-
-- `BankAccountService` — только CRUD + recalculate.
-- `AnalyticsService` — только аналитика (не смешивается с CRUD).
-- `DataManagementService` — только экспорт/импорт данных целиком.
-- `DataExporter` и `DataImporter` — разделены, клиент может использовать только нужный.
-
-**Без ISP:** если бы был один интерфейс `FinanceService` с 15+ методами, то, например, `TimingOperationService` должен был бы реализовывать методы аналитики, в которые он не вносит никакого поведения.
-
----
-
-### D — Dependency Inversion (Принцип инверсии зависимостей)
+### D — Dependency Inversion
 
 Модули высокого уровня зависят от абстракций, а не от конкретных реализаций:
 
-```java
-// BankAccountServiceImpl зависит от интерфейса, а не от класса:
-public class BankAccountServiceImpl implements BankAccountService {
-    private final BankAccountRepository repository;      // интерфейс
-    private final OperationRepository operationRepository; // интерфейс
+- `BankAccountServiceImpl` зависит от интерфейса `BankAccountRepository`, а не от `InMemoryBankAccountRepository`.
+- `OperationServiceImpl` зависит от трёх интерфейсов: `OperationRepository`, `BankAccountRepository`, `CategoryRepository` — ни один конкретный класс не упоминается.
+- `AnalyticalServiceImpl` зависит от интерфейсов `OperationService` и `CategoryService`.
 
-    public BankAccountServiceImpl(BankAccountRepository repository, ...) { ... }
+```java
+// OperationServiceImpl — все зависимости через интерфейсы:
+private final OperationRepository operationRepository;
+private final BankAccountRepository bankAccountRepository;
+private final CategoryRepository categoryRepository;
+```
+
+Spring IoC подставляет конкретные реализации через `@Service`, `@Repository`, `@RequiredArgsConstructor`. Нигде в бизнес-логике нет `new InMemory...()`.
+
+---
+
+## DI-контейнер
+
+Используется Spring IoC (`AnnotationConfigApplicationContext`). Контекст поднимается в `Main.java`:
+
+```java
+var context = new AnnotationConfigApplicationContext("tigerbank");
+```
+
+Spring сканирует пакет `tigerbank` и находит:
+- `@Repository` — `InMemoryBankAccountRepository`, `InMemoryCategoryRepository`, `InMemoryOperationRepository`
+- `@Service` — `BankAccountServiceImpl`, `CategoryServiceImpl`, `OperationServiceImpl`, `AnalyticalServiceImpl`
+- `@Component` — `JsonExporter`, `JsonImporter`, `CsvExporter`, `CsvImporter`, `YamlExporter`, `YamlImporter`, `TimingAspect`
+
+Зависимости связываются через `@RequiredArgsConstructor` — Lombok генерирует конструктор по всем `final` полям, Spring его вызывает и подставляет нужные бины. Ни один объект не создаётся через `new` в бизнес-логике.
+
+---
+
+## Замер времени
+
+Аннотация `@Timed` (`tigerbank.aspect.Timed`) навешена на методы `create` и `delete` в `BankAccountServiceImpl`, `CategoryServiceImpl`, `OperationServiceImpl`.
+
+`TimingAspect` перехватывает вызов через `@Around`:
+
+```java
+@Around("@annotation(Timed)")
+public Object measure(ProceedingJoinPoint joinPoint) throws Throwable {
+    long start = System.nanoTime();
+    Object result = joinPoint.proceed();
+    double ms = (System.nanoTime() - start) / 1_000_000.0;
+    System.out.printf("[Timed] %s — %.3f мс%n", methodName, ms);
+    return result;
 }
 ```
 
-Весь граф зависимостей собирается в одном месте — `AppContext` — который является «корнем композиции» (Composition Root). Нигде в бизнес-логике нет `new InMemory...()`.
+Пример вывода при создании счёта:
+```
+[Timed] BankAccountServiceImpl.create — 0.142 мс
+```
+
+Аспект работает только с объектами, полученными через Spring-контекст (`context.getBean(...)`), не через `new`.
 
 ---
 
-## Ситуации, при которых без абстракций возникли бы проблемы
+## Тестирование
 
-1. **Смена хранилища**: без интерфейса `BankAccountRepository` при переходе с HashMap на базу данных пришлось бы менять все сервисы.
+47 модульных тестов на JUnit 5, без Spring-контекста:
 
-2. **Новый формат экспорта**: без интерфейса `DataExporter` добавление XML потребовало бы правки `Main.java` и всех мест, где вызывается экспорт.
-
-3. **Замер производительности**: без декоратора и интерфейса `OperationService` пришлось бы вставлять замер прямо в бизнес-логику, нарушая SRP.
-
-4. **Тестируемость**: без интерфейсов нельзя подменить зависимость mock-объектом в тестах — тесты стали бы зависеть от конкретного хранилища.
+| Класс | Тестов | Что проверяется |
+|---|---|---|
+| `BankAccountServiceTest` | 9 | create (с балансом и без), дубликат id, findById (существующий и нет), updateName, delete (существующий и нет), findAll |
+| `CategoryServiceTest` | 9 | create, дубликат id, findById, findAll, findByType, updateName, delete, ошибки на несуществующих |
+| `OperationServiceTest` | 16 | create (с описанием и без), дубликат id, несуществующий счёт, несуществующая категория, несовпадение типов, updateAmount/Date/Description, delete, пересчёт баланса, findByBankAccountId, findByDateBetween, recalculateBalance |
+| `AnalyticalServiceTest` | 6 | calculateDifference за период с доходом и расходом, только расход, пустой период, пустой счёт; groupByCategory — корректные суммы, пустой период |
+| `ExportImportTest` | 7 | полный цикл export→import для JSON/CSV/YAML, сохранение null описания, сохранение описания, ошибки при неверном пути |
 
 ---
 
-## Почему введённые абстракции улучшают дизайн
+## Проблемы при расширении
 
-- **Изолированность изменений**: смена реализации одного слоя не затрагивает другие.
-- **Тестируемость**: каждый сервис тестируется с in-memory репозиторием без лишних зависимостей.
-- **Читаемость**: интерфейс как контракт — сразу понятно, что умеет объект.
-- **Расширяемость**: новые форматы, хранилища, декораторы добавляются без модификации существующего кода.
-- **Явная точка сборки**: `AppContext` — единственное место, где знают о конкретных классах.
+1. **Переход на реальную БД — методы update** — `updateName` в `BankAccountServiceImpl` и `CategoryServiceImpl`, `updateAmount`/`updateDate`/`updateDescription` в `OperationServiceImpl` изменяют поле объекта через `setX()`, но не вызывают `repository.save()`. В InMemory это работает, потому что HashMap хранит ссылку на тот же объект — изменение поля сразу видно. В реальной БД объект является локальной копией, полученной из БД, и без явного `save()` изменения никогда не попадут обратно. Потребуется добавить `repository.save(entity)` после каждого `set` во всех методах update.
+
+2. **`recalculateBalance` в `OperationService`** напрямую вызывает `account.setBalance()` через `BankAccountRepository`. Если в будущем логика баланса усложнится (транзакции, лимиты), это место станет узким местом.
+
+3. **Строковые id** — уникальность не гарантируется. Пользователь может создать счёт с id `""` или с пробелом. При масштабировании стоит перейти на UUID с автогенерацией.
+
+---
+
+## Почему абстракции улучшают дизайн
+
+- **Интерфейсы репозиториев** (`BankAccountRepository`, `CategoryRepository`, `OperationRepository`) позволяют тестировать сервисы без Spring и без файловой системы. В 47 тестах ни разу не поднимается контекст — каждый сервис тестируется изолированно с `new InMemory...()`.
+
+- **`DataExporter` / `DataImporter`** — если потребуется добавить новый формат (например, XML), достаточно создать два новых класса, реализующих эти интерфейсы. Ни один существующий класс не будет затронут.
+
+- **`AnalyticalService` отделён от CRUD** — аналитику можно переписать (поменять алгоритм группировки, добавить кэш) без риска сломать создание/удаление операций.
+
+- **`TimingAspect` через AOP** — если убрать замер времени, достаточно удалить один класс и аннотации. Бизнес-логика не изменится ни на строчку.
+
+- **Разделение интерфейсов сервисов** — `AnalyticalServiceImpl` зависит только от `OperationService` и `CategoryService`, а не от полного монолитного сервиса. Это упрощает понимание зависимостей и замену отдельных частей.
