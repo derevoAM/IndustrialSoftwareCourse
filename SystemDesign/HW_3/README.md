@@ -8,7 +8,7 @@
 
 ## Реализованный функционал
 
-| Функция | Фасад | Метод |
+| Функция | Класс | Метод |
 |---|---|---|
 | Создать счёт | `BankAccountFacade` | `create(id, name)` |
 | Переименовать счёт | `BankAccountFacade` | `updateName(id, newName)` |
